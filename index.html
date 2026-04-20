@@ -239,12 +239,13 @@ function parseLine(line, defaultStatus) {
   if (!match) return null;
   var id = match[2].trim(), proxy = match[3] ? match[3].trim() : '', note = match[4] ? match[4].trim() : '', status = defaultStatus;
   
-  // FIX 1: Send requested URL error to imcaros fix
+  // Logic to categorize based on the Note/Description
   if (note.indexOf("ERROR: The requested URL could not be retrieved") !== -1) {
     status = 'imcaros_fix';
   } else if (note === "Gmail") {
     status = 'empty';
-  } else if (note.indexOf("Problem loading page") !== -1) {
+  } else if (note.indexOf("Problem loading page") !== -1 || note.indexOf("#EANF#") !== -1) {
+    // UPDATED: Now puts #EANF# into Error Proxy category
     status = 'error_proxy';
   } else if (
     note.indexOf("Gmail: Private and secure email at no cost | Google Workspace") !== -1 || 
@@ -376,7 +377,6 @@ document.getElementById('copyListBtn').onclick = function() {
     document.getElementById('listModal').style.display = 'none';
 };
 
-// FIX 2: Safe Excel Download to prevent formatting errors
 document.getElementById('downloadXlsBtn').onclick = function() {
   function esc(t) { return ('' + (t || '')).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   var header = '<tr><th style="background:#f1f5f9;border:1px solid #cbd5e1">Status</th><th style="background:#f1f5f9;border:1px solid #cbd5e1">Profile ID</th><th style="background:#f1f5f9;border:1px solid #cbd5e1">Email</th><th style="background:#f1f5f9;border:1px solid #cbd5e1">Note</th><th style="background:#f1f5f9;border:1px solid #cbd5e1">Proxy</th></tr>';
@@ -427,11 +427,10 @@ document.getElementById('copyErrPrxBtn').onclick = function() {
   copy(list.join('\n'), 'Copied Error Proxies (' + list.length + ')');
 };
 
-// FIX 3: Copy Connected Emails, Synchronized 1:1, including duplicates and blank lines to match ID count
 document.getElementById('copyEmailsBtn').onclick = function() {
   var emails = allRows
     .filter(function(r) { return r.status === 'connected'; })
-    .map(function(r) { return r.email || ''; }); // Keeps blank lines if email is missing to maintain 1:1 sync
+    .map(function(r) { return r.email || ''; });
   
   copy(emails.join('\n'), 'Copied Emails (' + emails.length + ')');
 };
